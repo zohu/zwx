@@ -46,14 +46,14 @@ func (c *Context) GetQRCode(req *ReqGetQRCode) (*RespGetQRCode, error) {
 }
 
 type ReqGetUnlimitedQRCode struct {
-	Scene      string    `json:"scene"`
-	Page       string    `json:"page"`
-	CheckPath  bool      `json:"check_path"`
-	EnvVersion string    `json:"env_version"`
-	Width      int       `json:"width"`
-	AutoColor  bool      `json:"auto_color"`
-	LineColor  LineColor `json:"line_color"`
-	IsHyaline  bool      `json:"is_hyaline"`
+	Scene      *string    `json:"scene"`
+	Page       *string    `json:"page"`
+	CheckPath  *bool      `json:"check_path"`
+	EnvVersion *string    `json:"env_version"`
+	Width      *int       `json:"width"`
+	AutoColor  *bool      `json:"auto_color"`
+	LineColor  *LineColor `json:"line_color"`
+	IsHyaline  *bool      `json:"is_hyaline"`
 }
 
 // GetUnlimitedQRCode
@@ -67,7 +67,7 @@ func (c *Context) GetUnlimitedQRCode(req *ReqGetUnlimitedQRCode) (*RespGetQRCode
 	if err := zwx.NewHttp(zwx.MethodPost, zwx.ApiWxa.WithPath("getwxacodeunlimit")).
 		SetAccessToken(c.AccessToken()).
 		SetJson(req).
-		BindJson(&resp).
+		BindJsonOrBytes(&resp, &resp.Buffer).
 		Debug(c.IsDebug(), c.Logger()).
 		Do(); err != nil {
 		return nil, c.Error("get_limited_qrcode", err.Error())
@@ -109,4 +109,33 @@ func (c *Context) CreateQRCode(req *ReqCreateQRCode) (*RespGetQRCode, error) {
 		return nil, c.Error("create_qrcode", resp.Errmsg)
 	}
 	return &resp, nil
+}
+
+type ReqURLLink struct {
+	Path       string `json:"path"`        // 通过 URL Link 进入的小程序页面路径
+	Query      string `json:"query"`       // 通过 URL Link 进入小程序时的query
+	ExpireTime int64  `json:"expire_time"` // 失效时间 Unix 时间戳
+}
+type RespURLLink struct {
+	zwx.WxResponse
+	UrlLink string `json:"url_link"`
+}
+
+func (c *Context) URLLink(req *ReqURLLink) (string, error) {
+	var resp RespURLLink
+	if err := zwx.NewHttp(zwx.MethodPost, zwx.ApiWxa.WithPath("generate_urllink")).
+		SetAccessToken(c.AccessToken()).
+		SetJson(req).
+		BindJson(&resp).
+		Debug(c.IsDebug(), c.Logger()).
+		Do(); err != nil {
+		return "", c.Error("generate_urllink", err.Error())
+	}
+	if resp.Errcode != 0 {
+		if c.RetryAccessToken(resp.Errcode) {
+			return c.URLLink(req)
+		}
+		return "", c.Error("generate_urllink", resp.Errmsg)
+	}
+	return resp.UrlLink, nil
 }

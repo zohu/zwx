@@ -125,6 +125,15 @@ func (h *Http) BindXml(v any) *Http {
 	})
 	return h
 }
+func (h *Http) BindJsonOrBytes(obj any, v *[]byte) *Http {
+	h.handlers = append(h.handlers, func(resp *fasthttp.Response) {
+		if err := sonic.Unmarshal(resp.Body(), obj); err == nil {
+			return
+		}
+		*v = resp.Body()
+	})
+	return h
+}
 func (h *Http) Debug(debug bool, logger Logger) *Http {
 	h.debug = debug
 	h.logger = logger
