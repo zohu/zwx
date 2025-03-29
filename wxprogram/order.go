@@ -44,7 +44,7 @@ func (c *Context) UploadShippingInfo(openid, itemName string) error {
 		if c.RetryAccessToken(resp.Errcode) {
 			return c.UploadShippingInfo(openid, itemName)
 		}
-		return c.Error("get_phone_number", resp.Errmsg)
+		return c.Error("upload_shipping_info", resp.Errmsg)
 	}
 	return nil
 }
