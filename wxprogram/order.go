@@ -6,7 +6,9 @@ import (
 )
 
 type UploadShippingInfoOrderKey struct {
-	OrderNumberType int `json:"order_number_type"`
+	OrderNumberType int    `json:"order_number_type"`
+	Mchid           string `json:"mchid"`
+	OutTradeNo      string `json:"out_trade_no"`
 }
 type UploadShippingInfoShippingItem struct {
 	ItemDesc string `json:"item_desc"`
@@ -23,12 +25,16 @@ type ParamUploadShippingInfo struct {
 	Payer         UploadShippingInfoPayer          `json:"payer"`
 }
 
-func (c *Context) UploadShippingInfo(openid, itemName string) error {
+func (c *Context) UploadShippingInfo(openid, itemName, mchid, orderid string) error {
 	var resp zwx.WxResponse
 	if err := zwx.NewHttp(zwx.MethodPost, zwx.ApiWxa.WithPath("sec/order/upload_shipping_info")).
 		SetAccessToken(c.AccessToken()).
 		SetJson(&ParamUploadShippingInfo{
-			OrderKey:      UploadShippingInfoOrderKey{OrderNumberType: 1},
+			OrderKey: UploadShippingInfoOrderKey{
+				OrderNumberType: 1,
+				Mchid:           mchid,
+				OutTradeNo:      orderid,
+			},
 			LogisticsType: 3,
 			DeliveryMode:  1,
 			ShippingList:  []UploadShippingInfoShippingItem{{ItemDesc: itemName}},
@@ -42,7 +48,7 @@ func (c *Context) UploadShippingInfo(openid, itemName string) error {
 	}
 	if resp.Errcode != 0 {
 		if c.RetryAccessToken(resp.Errcode) {
-			return c.UploadShippingInfo(openid, itemName)
+			return c.UploadShippingInfo(openid, itemName, mchid, orderid)
 		}
 		return c.Error("upload_shipping_info", resp.Errmsg)
 	}
