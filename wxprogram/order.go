@@ -33,7 +33,7 @@ func (c *Context) UploadShippingInfo(openid, itemName, tid string) error {
 				OrderNumberType: 2,
 				TransactionId:   tid,
 			},
-			LogisticsType: 3,
+			LogisticsType: 4,
 			DeliveryMode:  1,
 			ShippingList:  []UploadShippingInfoShippingItem{{ItemDesc: itemName}},
 			UploadTime:    time.Now().Format(time.RFC3339),

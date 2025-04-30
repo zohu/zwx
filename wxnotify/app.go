@@ -15,8 +15,8 @@ func App(appid string) (*Context, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !c.IsWxMpServe() && !c.IsWxMpSubscribe() && !c.IsWork() {
-		return nil, c.Error("", "推送消息仅支持服务号、订阅号、企业号")
+	if !c.IsWxMpServe() && !c.IsWxMpSubscribe() && !c.IsWork() && !c.IsWxMiniProgram() {
+		return nil, c.Error("", "推送消息仅支持服务号、订阅号、企业号、小程序")
 	}
 	return &Context{Context: c}, nil
 }
